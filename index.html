@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Social Recall - Retro Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --box-w: 400px; 
+            --box-h: 650px;
+            --main-font: 'Pixelify Sans', sans-serif;
+        }
+        body { 
+            margin: 0; background: #1a1a1a; color: white; font-family: var(--main-font);
+            display: flex; justify-content: center; align-items: center; height: 100vh;
+            overflow: hidden; touch-action: none;
+        }
+        #game-container {
+            width: var(--box-w); height: var(--box-h);
+            background: #2d3436; position: relative; border-radius: 15px;
+            border: 4px solid #444; overflow: hidden;
+        }
+
+        /* Awkward Meter */
+        #meter-container {
+            position: absolute; top: 15px; left: 50px; width: 300px;
+            height: 12px; border: 2px solid #fff; border-radius: 10px; overflow: hidden;
+            background: #000; z-index: 5;
+        }
+        #awkward-bar {
+            width: 0%; height: 100%; background: #ff7675;
+            transition: width 0.5s ease;
+        }
+
+        /* Characters */
+        #header { display: flex; justify-content: space-around; padding: 40px 20px 20px 20px; }
+        .character { text-align: center; opacity: 0.4; transform: scale(0.9); transition: 0.4s; }
+        .character.active { opacity: 1; transform: scale(1.1); }
+        .profile-pic { 
+            width: 85px; height: 85px; border-radius: 50%; 
+            border: 4px solid #74b9ff; object-fit: cover; background: #333;
+        }
+        .name-tag { margin-top: 8px; font-size: 18px; }
+        
+        /* Chat UI */
+        #chat-area {
+            position: absolute; top: 210px; width: 90%; left: 5%;
+            background: rgba(0,0,0,0.7); border: 2px solid #74b9ff;
+            border-radius: 12px; padding: 18px; box-sizing: border-box;
+            text-align: center; min-height: 140px;
+        }
+        #dialogue-text { font-size: 20px; line-height: 1.3; min-height: 52px; white-space: pre-wrap; }
+        #reply-prompt { color: #55efc4; margin-top: 12px; font-size: 16px; font-weight: bold; }
+        #status-text { margin-top: 10px; font-size: 18px; color: #fab1a0; }
+
+        /* Rhythm Grid */
+        #grid {
+            position: absolute; bottom: 40px; width: 100%;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 20px;
+            box-sizing: border-box;
+        }
+        .square {
+            height: 100px; border-radius: 8px; cursor: pointer;
+            transition: transform 0.1s; border-bottom: 5px solid rgba(0,0,0,0.3);
+        }
+        .sq-1 { background: #55efc4; } .sq-2 { background: #81ecec; }
+        .sq-3 { background: #74b9ff; } .sq-4 { background: #a29bfe; }
+        .flash { filter: brightness(1.8); transform: scale(0.95); }
+
+        #overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 100;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        button {
+            padding: 12px 35px; font-size: 22px; cursor: pointer; font-family: var(--main-font);
+            background: #0984e3; color: white; border: none; border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="meter-container"><div id="awkward-bar"></div></div>
+
+    <div id="header">
+        <div id="char-a" class="character">
+            <img src="Asset/Image/wani.webp" class="profile-pic">
+            <div class="name-tag">WANI</div>
+        </div>
+        <div id="char-b" class="character">
+            <img src="Asset/Image/nat.webp" class="profile-pic">
+            <div class="name-tag">NAT</div>
+        </div>
+    </div>
+
+    <div id="chat-area">
+        <div id="dialogue-text"></div>
+        <div id="reply-prompt"></div>
+        <div id="status-text"></div>
+    </div>
+
+    <div id="grid">
+        <div class="square sq-1" onmousedown="handleInput(1)"></div>
+        <div class="square sq-2" onmousedown="handleInput(2)"></div>
+        <div class="square sq-3" onmousedown="handleInput(3)"></div>
+        <div class="square sq-4" onmousedown="handleInput(4)"></div>
+    </div>
+
+    <div id="overlay">
+        <h1 style="font-size: 40px; color: #74b9ff;">SOCIAL RECALL</h1>
+        <button onclick="startGame()">START GAME</button>
+    </div>
+</div>
+
+<script>
+    const PATHS = {
+        bgm: 'Asset/Audio/bgm1.ogg',
+        sfx: ['Asset/Audio/sq1.ogg', 'Asset/Audio/sq2.ogg', 'Asset/Audio/sq3.ogg', 'Asset/Audio/sq4.ogg'],
+        fail: 'Asset/Audio/wrong.ogg'
+    };
+
+    const DIALOGUES = [
+        { speaker: 'A', text: "Lapar ni. Jom pi makan.", targetReply: "Jom! Aku pun tak makan lagi.", failReply: "Sapa suruh kamu tak makan tadi.", patternLen: 3, speed: 800, audio: 'Asset/Audio/dialog1.ogg' },
+        { speaker: 'B', text: "Nak makan kat mano?", targetReply: "Mana2 pun boleh je.", failReply: "Taknak la, nak diet.", patternLen: 3, speed: 700, audio: 'Asset/Audio/dialog2.ogg' },
+        { speaker: 'A', text: "Lepas makan, jom tengok wayang.", targetReply: "Boleh! Lama tak masuk cinema.", failReply: "Taknak, bazir masa aku.", patternLen: 4, speed: 650, audio: 'Asset/Audio/dialog3.ogg' },
+        { speaker: 'B', text: "Lepas tu, nak pi mano?", targetReply: "Aku tau satu tempat cantik.", failReply: "Nanti aku perlu balik company.", patternLen: 4, speed: 600, audio: 'Asset/Audio/dialog4.ogg' }
+    ];
+
+    const bgm = new Audio(PATHS.bgm); bgm.loop = true; bgm.volume = 0.2;
+    const sfxFail = new Audio(PATHS.fail);
+    const squareSFX = PATHS.sfx.map(src => new Audio(src));
+
+    let currentStep = 0;
+    let awkwardScore = 0;
+    let gameState = 'IDLE';
+    let sequence = [];
+    let playerInputs = [];
+    let typewriterInterval = null;
+
+    function startGame() {
+        document.getElementById('overlay').style.display = 'none';
+        bgm.play();
+        nextRound();
+    }
+
+    // FIXED TYPEWRITER: No more missing spaces
+    function typeWriter(text, elementId, speed = 40, callback) {
+        const element = document.getElementById(elementId);
+        element.textContent = ""; // Clear existing text
+        let i = 0;
+        clearInterval(typewriterInterval);
+        
+        typewriterInterval = setInterval(() => {
+            if (i < text.length) {
+                element.textContent += text[i]; // Use array index to preserve spaces
+                i++;
+            } else {
+                clearInterval(typewriterInterval);
+                if (callback) callback();
+            }
+        }, speed);
+    }
+
+    function updateAwkwardMeter(amount) {
+        awkwardScore += amount;
+        if (awkwardScore > 100) awkwardScore = 100;
+        document.getElementById('awkward-bar').style.width = awkwardScore + "%";
+        
+        if (awkwardScore >= 100) {
+            setTimeout(() => {
+                alert("Too Awkward! GAME OVER");
+                location.reload();
+            }, 500);
+        }
+    }
+
+    function nextRound() {
+        if (currentStep >= DIALOGUES.length) {
+            typeWriter("CONVERSATION COMPLETE!", "dialogue-text", 50);
+            return;
+        }
+
+        gameState = 'DIALOGUE';
+        const data = DIALOGUES[currentStep];
+        
+        document.getElementById('char-a').classList.toggle('active', data.speaker === 'A');
+        document.getElementById('char-b').classList.toggle('active', data.speaker === 'B');
+        document.getElementById('reply-prompt').innerText = "";
+        document.getElementById('status-text').innerText = "";
+
+        new Audio(data.audio).play().catch(e=>{});
+        
+        typeWriter(data.text, "dialogue-text", 40, () => {
+            setTimeout(() => {
+                document.getElementById('reply-prompt').style.color = "#55efc4";
+                document.getElementById('reply-prompt').innerText = `Reply: "${data.targetReply}"`;
+                setTimeout(runPattern, 1200);
+            }, 800);
+        });
+    }
+
+    function runPattern() {
+        gameState = 'SHOWING';
+        sequence = []; playerInputs = [];
+        const data = DIALOGUES[currentStep];
+        document.getElementById('status-text').innerText = "WATCH...";
+
+        let delay = 500;
+        for (let i = 0; i < data.patternLen; i++) {
+            const id = Math.floor(Math.random() * 4) + 1;
+            sequence.push(id);
+            setTimeout(() => {
+                flashSquare(id);
+                if (i === data.patternLen - 1) {
+                    setTimeout(() => {
+                        gameState = 'REPLYING';
+                        document.getElementById('status-text').innerText = "GO!";
+                    }, 800);
+                }
+            }, delay);
+            delay += data.speed;
+        }
+    }
+
+    function handleInput(id) {
+        if (gameState !== 'REPLYING') return;
+        flashSquare(id);
+        
+        const data = DIALOGUES[currentStep];
+        const expected = sequence[playerInputs.length];
+
+        if (id === expected) {
+            playerInputs.push(id);
+            if (playerInputs.length === sequence.length) {
+                gameState = 'IDLE';
+                document.getElementById('status-text').innerText = "PERFECT!";
+                currentStep++;
+                setTimeout(nextRound, 1500);
+            }
+        } else {
+            gameState = 'IDLE';
+            document.getElementById('status-text').innerText = "AWKWARD...";
+            document.getElementById('reply-prompt').style.color = "#ff7675";
+            document.getElementById('reply-prompt').innerText = `You: "${data.failReply}"`;
+            sfxFail.play();
+            updateAwkwardMeter(34); // 3 fails and you're out
+            currentStep++; 
+            setTimeout(nextRound, 2500);
+        }
+    }
+
+    function flashSquare(id) {
+        const el = document.querySelector(`.sq-${id}`);
+        el.classList.add('flash');
+        squareSFX[id-1].currentTime = 0;
+        squareSFX[id-1].play().catch(e=>{});
+        setTimeout(() => el.classList.remove('flash'), 150);
+    }
+</script>
+</body>
+</html>
