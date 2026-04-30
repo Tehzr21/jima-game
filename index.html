@@ -2,261 +2,255 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Social Recall - Retro Edition</title>
-    <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Recall - Final Fix</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.60.0/phaser.min.js"></script>
     <style>
-        :root { 
-            --box-w: 400px; 
-            --box-h: 650px;
-            --main-font: 'Pixelify Sans', sans-serif;
-        }
-        body { 
-            margin: 0; background: #1a1a1a; color: white; font-family: var(--main-font);
-            display: flex; justify-content: center; align-items: center; height: 100vh;
-            overflow: hidden; touch-action: none;
-        }
-        #game-container {
-            width: var(--box-w); height: var(--box-h);
-            background: #2d3436; position: relative; border-radius: 15px;
-            border: 4px solid #444; overflow: hidden;
-        }
-
-        /* Awkward Meter */
-        #meter-container {
-            position: absolute; top: 15px; left: 50px; width: 300px;
-            height: 12px; border: 2px solid #fff; border-radius: 10px; overflow: hidden;
-            background: #000; z-index: 5;
-        }
-        #awkward-bar {
-            width: 0%; height: 100%; background: #ff7675;
-            transition: width 0.5s ease;
-        }
-
-        /* Characters */
-        #header { display: flex; justify-content: space-around; padding: 40px 20px 20px 20px; }
-        .character { text-align: center; opacity: 0.4; transform: scale(0.9); transition: 0.4s; }
-        .character.active { opacity: 1; transform: scale(1.1); }
-        .profile-pic { 
-            width: 85px; height: 85px; border-radius: 50%; 
-            border: 4px solid #74b9ff; object-fit: cover; background: #333;
-        }
-        .name-tag { margin-top: 8px; font-size: 18px; }
-        
-        /* Chat UI */
-        #chat-area {
-            position: absolute; top: 210px; width: 90%; left: 5%;
-            background: rgba(0,0,0,0.7); border: 2px solid #74b9ff;
-            border-radius: 12px; padding: 18px; box-sizing: border-box;
-            text-align: center; min-height: 140px;
-        }
-        #dialogue-text { font-size: 20px; line-height: 1.3; min-height: 52px; white-space: pre-wrap; }
-        #reply-prompt { color: #55efc4; margin-top: 12px; font-size: 16px; font-weight: bold; }
-        #status-text { margin-top: 10px; font-size: 18px; color: #fab1a0; }
-
-        /* Rhythm Grid */
-        #grid {
-            position: absolute; bottom: 40px; width: 100%;
-            display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 20px;
-            box-sizing: border-box;
-        }
-        .square {
-            height: 100px; border-radius: 8px; cursor: pointer;
-            transition: transform 0.1s; border-bottom: 5px solid rgba(0,0,0,0.3);
-        }
-        .sq-1 { background: #55efc4; } .sq-2 { background: #81ecec; }
-        .sq-3 { background: #74b9ff; } .sq-4 { background: #a29bfe; }
-        .flash { filter: brightness(1.8); transform: scale(0.95); }
-
-        #overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); z-index: 100;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-        }
-        button {
-            padding: 12px 35px; font-size: 22px; cursor: pointer; font-family: var(--main-font);
-            background: #0984e3; color: white; border: none; border-radius: 8px;
-        }
+        body { margin: 0; background: #1a1a1a; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; font-family: 'Arial', sans-serif; }
+        #start-screen { position: absolute; width: 400px; height: 650px; background: rgba(0,0,0,0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; color: white; text-align: center; border-radius: 15px; padding: 20px; box-sizing: border-box; }
+        button { padding: 15px 40px; font-size: 18px; cursor: pointer; background: #0984e3; color: white; border: none; border-radius: 50px; margin-top: 20px; font-weight: bold; }
+        canvas { border-radius: 15px; }
     </style>
 </head>
 <body>
 
-<div id="game-container">
-    <div id="meter-container"><div id="awkward-bar"></div></div>
-
-    <div id="header">
-        <div id="char-a" class="character">
-            <img src="Asset/Image/wani.webp" class="profile-pic">
-            <div class="name-tag">WANI</div>
-        </div>
-        <div id="char-b" class="character">
-            <img src="Asset/Image/nat.webp" class="profile-pic">
-            <div class="name-tag">NAT</div>
-        </div>
-    </div>
-
-    <div id="chat-area">
-        <div id="dialogue-text"></div>
-        <div id="reply-prompt"></div>
-        <div id="status-text"></div>
-    </div>
-
-    <div id="grid">
-        <div class="square sq-1" onmousedown="handleInput(1)"></div>
-        <div class="square sq-2" onmousedown="handleInput(2)"></div>
-        <div class="square sq-3" onmousedown="handleInput(3)"></div>
-        <div class="square sq-4" onmousedown="handleInput(4)"></div>
-    </div>
-
-    <div id="overlay">
-        <h1 style="font-size: 40px; color: #74b9ff;">SOCIAL RECALL</h1>
-        <button onclick="startGame()">START GAME</button>
-    </div>
+<div id="start-screen">
+    <h1 style="color: #74b9ff;">SOCIAL RECALL</h1>
+    <p>Press start to begin conversation</p>
+    <button id="start-button">START GAME</button>
 </div>
 
 <script>
-    const PATHS = {
-        bgm: 'Asset/Audio/bgm1.ogg',
-        sfx: ['Asset/Audio/sq1.ogg', 'Asset/Audio/sq2.ogg', 'Asset/Audio/sq3.ogg', 'Asset/Audio/sq4.ogg'],
-        fail: 'Asset/Audio/wrong.ogg'
-    };
+// --- CONFIGURABLE PATHS ---
+const PATH_BGM         = 'Asset/Audio/bgm1.ogg';
+const PATH_IMG_FRIEND_A = 'Asset/Image/wani.webp'; 
+const PATH_IMG_FRIEND_B = 'Asset/Image/nat.webp';
 
-    const DIALOGUES = [
-        { speaker: 'A', text: "Lapar ni. Jom pi makan.", targetReply: "Jom! Aku pun tak makan lagi.", failReply: "Sapa suruh kamu tak makan tadi.", patternLen: 3, speed: 800, audio: 'Asset/Audio/dialog1.ogg' },
-        { speaker: 'B', text: "Nak makan kat mano?", targetReply: "Mana2 pun boleh je.", failReply: "Taknak la, nak diet.", patternLen: 3, speed: 700, audio: 'Asset/Audio/dialog2.ogg' },
-        { speaker: 'A', text: "Lepas makan, jom tengok wayang.", targetReply: "Boleh! Lama tak masuk cinema.", failReply: "Taknak, bazir masa aku.", patternLen: 4, speed: 650, audio: 'Asset/Audio/dialog3.ogg' },
-        { speaker: 'B', text: "Lepas tu, nak pi mano?", targetReply: "Aku tau satu tempat cantik.", failReply: "Nanti aku perlu balik company.", patternLen: 4, speed: 600, audio: 'Asset/Audio/dialog4.ogg' }
-    ];
+const PATH_SFX_SQ1 = 'Asset/Audio/sq1.ogg';
+const PATH_SFX_SQ2 = 'Asset/Audio/sq2.ogg';
+const PATH_SFX_SQ3 = 'Asset/Audio/sq3.ogg';
+const PATH_SFX_SQ4 = 'Asset/Audio/sq4.ogg';
+const PATH_SFX_FAIL     = 'Asset/Audio/wrong.ogg';    
+const PATH_SFX_GAMEOVER = 'Asset/Audio/gameover.ogg'; 
 
-    const bgm = new Audio(PATHS.bgm); bgm.loop = true; bgm.volume = 0.2;
-    const sfxFail = new Audio(PATHS.fail);
-    const squareSFX = PATHS.sfx.map(src => new Audio(src));
+// --- NATIVE PRELOAD (Like Item Catch) ---
+[PATH_IMG_FRIEND_A, PATH_IMG_FRIEND_B].forEach(src => {
+    const img = new Image();
+    img.src = src;
+});
 
-    let currentStep = 0;
-    let awkwardScore = 0;
-    let gameState = 'IDLE';
-    let sequence = [];
-    let playerInputs = [];
-    let typewriterInterval = null;
+const DIALOGUES = [
+    { speaker: 'A', text: "Lapar ni. Jom pi makan.", targetReply: "Jom! Aku pun tak makan lagi.", failReply: "Sapa suruh kamu tak makan tadi.", patternLen: 3, speed: 800, audioPath: 'Asset/Audio/dialog1.ogg' },
+    { speaker: 'B', text: "Nak makan kat mano?", targetReply: "Mana2 pun boleh je.", failReply: "Taknak la, nak diet.", patternLen: 3, speed: 700, audioPath: 'Asset/Audio/dialog2.ogg' },
+    { speaker: 'A', text: "Lepas makan, jom tengok wayang.", targetReply: "Boleh! Lama tak masuk cinema.", failReply: "Taknak, bazir masa aku.", patternLen: 4, speed: 650, audioPath: 'Asset/Audio/dialog3.ogg' },
+    { speaker: 'B', text: "Lepas tu, nak pi mano?", targetReply: "Aku tau satu tempat cantik.", failReply: "Nanti aku perlu balik company.", patternLen: 4, speed: 600, audioPath: 'Asset/Audio/dialog4.ogg' },
+    { speaker: 'A', text: "Ada apa kat situ?", targetReply: "Ada kucing ada pantai.", failReply: "Saja nak OT.", patternLen: 5, speed: 500, audioPath: 'Asset/Audio/dialog5.ogg' },
+    { speaker: 'B', text: "Macam syiok", targetReply: "Tak tipu. Jom ah nanti.", failReply: "Mestila, gaji lagi penting.", patternLen: 5, speed: 450, audioPath: 'Asset/Audio/dialog6.ogg' }
+];
 
-    function startGame() {
-        document.getElementById('overlay').style.display = 'none';
-        bgm.play();
-        nextRound();
+const bgmAudio = new Audio(PATH_BGM);
+bgmAudio.loop = true;
+bgmAudio.volume = 0.1;
+
+const squareSFX = [new Audio(PATH_SFX_SQ1), new Audio(PATH_SFX_SQ2), new Audio(PATH_SFX_SQ3), new Audio(PATH_SFX_SQ4)];
+const sfxFail = new Audio(PATH_SFX_FAIL);
+const sfxGameOver = new Audio(PATH_SFX_GAMEOVER);
+
+let dialogueAudio = null;
+
+const config = {
+    type: Phaser.AUTO,
+    width: 400,
+    height: 650,
+    backgroundColor: '#2d3436',
+    scene: { preload, create, update }
+};
+
+const game = new Phaser.Game(config);
+let currentRound = 0, awkwardScore = 0, sequence = [], playerInputs = [], gameState = 'IDLE'; 
+let firstHitTime = 0, timeoutTimer = null, friendA, friendB;
+
+document.getElementById('start-button').addEventListener('click', function() {
+    bgmAudio.play().catch(e => console.log("Audio Error"));
+    document.getElementById('start-screen').style.display = 'none';
+    const mainScene = game.scene.scenes[0];
+    if (mainScene) mainScene.nextRound();
+});
+
+function preload() {
+    // Load using Phaser's loader, but we use the exact paths
+    this.load.image('wani', PATH_IMG_FRIEND_A);
+    this.load.image('nat', PATH_IMG_FRIEND_B);
+}
+
+function create() {
+    // FRIEND A
+    friendA = this.add.container(100, 100);
+    let circleA = this.add.circle(0, 0, 40, 0x74b9ff);
+    let imgA = this.add.image(0, 0, 'wani').setDisplaySize(80, 80);
+    
+    // Improved Masking
+    let shapeA = this.make.graphics();
+    shapeA.fillCircle(100, 100, 40);
+    imgA.setMask(shapeA.createGeometryMask());
+    
+    friendA.add([circleA, imgA, this.add.text(0, 55, "WANI", {fontSize:'12px', fontStyle:'bold'}).setOrigin(0.5)]);
+    
+    // FRIEND B
+    friendB = this.add.container(300, 100);
+    let circleB = this.add.circle(0, 0, 40, 0xa29bfe);
+    let imgB = this.add.image(0, 0, 'nat').setDisplaySize(80, 80);
+    
+    let shapeB = this.make.graphics();
+    shapeB.fillCircle(300, 100, 40);
+    imgB.setMask(shapeB.createGeometryMask());
+    
+    friendB.add([circleB, imgB, this.add.text(0, 55, "NAT", {fontSize:'12px', fontStyle:'bold'}).setOrigin(0.5)]);
+
+    this.bubble = this.add.rectangle(200, 275, 350, 130, 0x000000, 0.5).setStrokeStyle(2, 0x74b9ff);
+    this.chatText = this.add.text(200, 245, "", { fontSize: '18px', align: 'center', wordWrap: { width: 320 } }).setOrigin(0.5);
+    this.replyPrompt = this.add.text(200, 285, "", { fontSize: '14px', color: '#55efc4', fontStyle: 'bold', wordWrap: { width: 320 }, align: 'center' }).setOrigin(0.5);
+    this.statusText = this.add.text(200, 320, "", { fontSize: '12px', color: '#ffffff' }).setOrigin(0.5);
+    this.awkwardFill = this.add.rectangle(50, 30, 0, 10, 0xff7675).setOrigin(0, 0.5);
+    this.add.rectangle(200, 30, 300, 10).setStrokeStyle(1, 0xffffff);
+
+    this.squares = [];
+    const colors = [0x55efc4, 0x81ecec, 0x74b9ff, 0xa29bfe];
+    const positions = [{x:120, y:435}, {x:280, y:435}, {x:120, y:565}, {x:280, y:565}];
+    for(let i=0; i<4; i++) {
+        let sq = this.add.rectangle(positions[i].x, positions[i].y, 140, 110, colors[i]);
+        sq.setInteractive().id = i + 1;
+        sq.on('pointerdown', () => handleInput.call(this, sq.id));
+        this.squares.push(sq);
     }
+}
 
-    // FIXED TYPEWRITER: No more missing spaces
-    function typeWriter(text, elementId, speed = 40, callback) {
-        const element = document.getElementById(elementId);
-        element.textContent = ""; // Clear existing text
-        let i = 0;
-        clearInterval(typewriterInterval);
-        
-        typewriterInterval = setInterval(() => {
-            if (i < text.length) {
-                element.textContent += text[i]; // Use array index to preserve spaces
-                i++;
-            } else {
-                clearInterval(typewriterInterval);
-                if (callback) callback();
+Phaser.Scene.prototype.nextRound = function() {
+    if (currentRound >= DIALOGUES.length) {
+        this.chatText.setText("CONVERSATION COMPLETE!");
+        this.replyPrompt.setText("");
+        bgmAudio.pause();
+        return;
+    }
+    gameState = 'DIALOGUE';
+    let data = DIALOGUES[currentRound];
+    updateScale(data.speaker);
+    this.chatText.setText(data.text);
+    this.statusText.setText("");
+    this.replyPrompt.setText("");
+
+    if (dialogueAudio) { dialogueAudio.pause(); }
+    dialogueAudio = new Audio(data.audioPath);
+    dialogueAudio.play().catch(e => {});
+
+    this.time.delayedCall(2200, () => {
+        this.replyPrompt.setText(`Let's reply: "${data.targetReply}"`);
+        this.time.delayedCall(1800, () => { this.runExample(); });
+    });
+};
+
+Phaser.Scene.prototype.runExample = function() {
+    gameState = 'CALL';
+    sequence = []; playerInputs = [];
+    let data = DIALOGUES[currentRound];
+    this.statusText.setText("Listen to the tempo...");
+    let totalDelay = 500;
+    for(let i=0; i < data.patternLen; i++) {
+        let id = Phaser.Math.Between(1, 4);
+        let interval = (i === 0) ? 0 : data.speed;
+        totalDelay += interval;
+        sequence.push({ id, interval });
+        this.time.delayedCall(totalDelay, () => {
+            flashSquare.call(this, id);
+            if (i === (data.patternLen - 1)) {
+                this.time.delayedCall(800, () => {
+                    gameState = 'RESPONSE';
+                    this.statusText.setText("GO!");
+                    timeoutTimer = this.time.delayedCall(4000, () => {
+                        if (playerInputs.length === 0 && gameState === 'RESPONSE') resolveRound.call(this, false, "TOO SLOW!");
+                    });
+                });
             }
-        }, speed);
-    }
-
-    function updateAwkwardMeter(amount) {
-        awkwardScore += amount;
-        if (awkwardScore > 100) awkwardScore = 100;
-        document.getElementById('awkward-bar').style.width = awkwardScore + "%";
-        
-        if (awkwardScore >= 100) {
-            setTimeout(() => {
-                alert("Too Awkward! GAME OVER");
-                location.reload();
-            }, 500);
-        }
-    }
-
-    function nextRound() {
-        if (currentStep >= DIALOGUES.length) {
-            typeWriter("CONVERSATION COMPLETE!", "dialogue-text", 50);
-            return;
-        }
-
-        gameState = 'DIALOGUE';
-        const data = DIALOGUES[currentStep];
-        
-        document.getElementById('char-a').classList.toggle('active', data.speaker === 'A');
-        document.getElementById('char-b').classList.toggle('active', data.speaker === 'B');
-        document.getElementById('reply-prompt').innerText = "";
-        document.getElementById('status-text').innerText = "";
-
-        new Audio(data.audio).play().catch(e=>{});
-        
-        typeWriter(data.text, "dialogue-text", 40, () => {
-            setTimeout(() => {
-                document.getElementById('reply-prompt').style.color = "#55efc4";
-                document.getElementById('reply-prompt').innerText = `Reply: "${data.targetReply}"`;
-                setTimeout(runPattern, 1200);
-            }, 800);
         });
     }
+};
 
-    function runPattern() {
-        gameState = 'SHOWING';
-        sequence = []; playerInputs = [];
-        const data = DIALOGUES[currentStep];
-        document.getElementById('status-text').innerText = "WATCH...";
+function handleInput(id) {
+    if (gameState !== 'RESPONSE') return;
+    const now = this.time.now;
+    flashSquare.call(this, id);
 
-        let delay = 500;
-        for (let i = 0; i < data.patternLen; i++) {
-            const id = Math.floor(Math.random() * 4) + 1;
-            sequence.push(id);
-            setTimeout(() => {
-                flashSquare(id);
-                if (i === data.patternLen - 1) {
-                    setTimeout(() => {
-                        gameState = 'REPLYING';
-                        document.getElementById('status-text').innerText = "GO!";
-                    }, 800);
-                }
-            }, delay);
-            delay += data.speed;
-        }
-    }
-
-    function handleInput(id) {
-        if (gameState !== 'REPLYING') return;
-        flashSquare(id);
-        
-        const data = DIALOGUES[currentStep];
-        const expected = sequence[playerInputs.length];
-
-        if (id === expected) {
-            playerInputs.push(id);
-            if (playerInputs.length === sequence.length) {
-                gameState = 'IDLE';
-                document.getElementById('status-text').innerText = "PERFECT!";
-                currentStep++;
-                setTimeout(nextRound, 1500);
-            }
+    if (playerInputs.length === 0) {
+        if (timeoutTimer) timeoutTimer.remove();
+        if (id === sequence[0].id) {
+            firstHitTime = now;
+            playerInputs.push({ id, time: now });
         } else {
-            gameState = 'IDLE';
-            document.getElementById('status-text').innerText = "AWKWARD...";
-            document.getElementById('reply-prompt').style.color = "#ff7675";
-            document.getElementById('reply-prompt').innerText = `You: "${data.failReply}"`;
-            sfxFail.play();
-            updateAwkwardMeter(34); // 3 fails and you're out
-            currentStep++; 
-            setTimeout(nextRound, 2500);
+            resolveRound.call(this, false, "WRONG START!");
         }
+        return;
     }
 
-    function flashSquare(id) {
-        const el = document.querySelector(`.sq-${id}`);
-        el.classList.add('flash');
-        squareSFX[id-1].currentTime = 0;
-        squareSFX[id-1].play().catch(e=>{});
-        setTimeout(() => el.classList.remove('flash'), 150);
+    let idx = playerInputs.length;
+    let expected = sequence[idx];
+    let targetTime = 0;
+    for (let i = 1; i <= idx; i++) targetTime += sequence[i].interval;
+
+    if (id === expected.id && Math.abs((now - firstHitTime) - targetTime) <= 300) {
+        playerInputs.push({ id, time: now });
+        if (playerInputs.length === sequence.length) resolveRound.call(this, true, "PERFECT!");
+    } else {
+        resolveRound.call(this, false, "WRONG!");
     }
+}
+
+function resolveRound(success, msg) {
+    gameState = 'IDLE';
+    if (timeoutTimer) timeoutTimer.remove();
+    let data = DIALOGUES[currentRound];
+    this.statusText.setText(msg);
+
+    if (!success) {
+        sfxFail.currentTime = 0;
+        sfxFail.play().catch(e => {});
+        awkwardScore += 34; 
+        this.awkwardFill.width = Math.min((awkwardScore / 100) * 300, 300);
+        this.replyPrompt.setText(`You: "${data.failReply}"`).setColor('#ff7675');
+        this.cameras.main.shake(200, 0.005);
+    } 
+
+    currentRound++;
+    this.time.delayedCall(2500, () => {
+        if (awkwardScore >= 100) {
+            bgmAudio.pause();
+            sfxGameOver.play().catch(e => {});
+            this.chatText.setText("GAME OVER: TOO AWKWARD");
+            this.replyPrompt.setText("");
+            this.time.delayedCall(4000, () => location.reload());
+        } else {
+            this.replyPrompt.setColor('#55efc4');
+            this.nextRound();
+        }
+    });
+}
+
+function flashSquare(id) {
+    let sq = this.squares[id-1];
+    if(!sq) return;
+    sq.setAlpha(0.5);
+    let sfx = squareSFX[id-1];
+    sfx.currentTime = 0; 
+    sfx.play().catch(e => {});
+    game.scene.scenes[0].time.delayedCall(150, () => sq.setAlpha(1));
+}
+
+function updateScale(speaker) {
+    const scene = game.scene.scenes[0];
+    scene.tweens.add({ targets: friendA, scale: speaker === 'A' ? 1.3 : 0.8, alpha: speaker === 'A' ? 1 : 0.4, duration: 300 });
+    scene.tweens.add({ targets: friendB, scale: speaker === 'B' ? 1.3 : 0.8, alpha: speaker === 'B' ? 1 : 0.4, duration: 300 });
+}
+
+function update() {}
 </script>
 </body>
 </html>
