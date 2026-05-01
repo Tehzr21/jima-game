@@ -2,107 +2,781 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>The Story</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Story & Game Integration</title>
     <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
+    
     <style>
-        body {
-            background: #111; color: white; font-family: 'Pixelify Sans', sans-serif;
-            display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0;
-            text-align: center;
+        /* --- GLOBAL STYLES --- */
+        body { 
+            margin: 0; background: #1a1a1a; color: white; 
+            font-family: 'Pixelify Sans', sans-serif;
+            user-select: none; touch-action: none; overflow: hidden;
         }
-        #scene-container {
-            width: 450px; height: 600px; border: 4px solid #444; border-radius: 20px;
-            position: relative; background-color: #222; 
-            display: flex; flex-direction: column; justify-content: center; padding: 30px; box-sizing: border-box;
+
+        /* --- RESPONSIVE SHARED CONTAINER --- */
+        .responsive-container {
+            width: 100%; max-width: 450px;
+            height: 100%; max-height: 750px;
+            border: 4px solid #444; border-radius: 24px;
+            position: relative; overflow: hidden; background-color: #000;
+            box-sizing: border-box;
         }
-        #typewriter-text { font-size: 24px; min-height: 120px; margin-bottom: 30px; line-height: 1.4; }
-        button { 
-            padding: 15px 30px; font-size: 20px; cursor: pointer; 
-            background: #2196F3; color: white; border: none; border-radius: 8px;
-            font-family: 'Pixelify Sans', sans-serif; font-weight: bold;
+        
+        /* Remove borders on mobile so it looks like a native app */
+        @media (max-width: 450px), (max-height: 750px) {
+            .responsive-container {
+                border: none; border-radius: 0;
+                max-width: 100vw; max-height: 100vh;
+            }
         }
-        .reset-btn {
-            position: absolute; bottom: 10px; font-size: 12px; background: none; color: #555; box-shadow: none;
+
+        /* --- WRAPPERS --- */
+        .wrapper {
+            display: none; flex-direction: column; align-items: center; justify-content: center; 
+            height: 100vh; width: 100vw;
         }
+
+        /* ========================================= */
+        /*         SHARED SCENE STYLES (1 to 4)      */
+        /* ========================================= */
+        .story-bg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover; background-position: center;
+            opacity: 0; transition: opacity 2s ease;
+        }
+        .story-box {
+            position: absolute; bottom: 50px; left: 5%; width: 90%; min-height: 160px; 
+            background-image: url('Asset/Image/dialog_bg.webp');
+            background-size: 100% 100%; background-color: rgba(0,0,0,0.8);
+            border-radius: 12px; opacity: 0; transition: opacity 1s ease; z-index: 5;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            padding: 20px; box-sizing: border-box; text-align: center;
+        }
+        .story-btn {
+            display: none; padding: 10px 25px; font-size: 20px; margin-top: 15px;
+            cursor: pointer; border: none; background: #4CAF50; color: white; border-radius: 8px; 
+            box-shadow: 0 4px #2e7d32; font-family: 'Pixelify Sans', sans-serif; font-weight: bold;
+        }
+        .story-btn:active { transform: translateY(2px); box-shadow: 0 2px #2e7d32; }
+
+        /* Specific Scene 1 Intro Box */
+        #scene1-box1 {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.85); padding: 25px; border-radius: 12px;
+            opacity: 0; transition: opacity 1s ease; text-align: center; border: 2px solid #555; z-index: 5;
+            width: 80%; box-sizing: border-box;
+        }
+        #scene1-start-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000;
+            display: flex; justify-content: center; align-items: center; z-index: 20;
+        }
+        #scene1-start-overlay button {
+            padding: 12px 25px; font-size: 22px; cursor: pointer; border: none; background: #4CAF50; color: white; border-radius: 8px; box-shadow: 0 4px #2e7d32; font-family: 'Pixelify Sans', sans-serif; font-weight: bold;
+        }
+
+        /* ========================================= */
+        /*             GAME 1 STYLES                 */
+        /* ========================================= */
+        #game1-wrapper { --bg-game: url('Asset/Image/game_bg1.webp'); }
+        #ui { margin-bottom: 10px; font-size: 22px; font-weight: bold; height: 50px; display: flex; align-items: center; }
+        .ui-circle { width: 35px; height: 35px; border-radius: 50%; border: 3px solid #444; margin: 0 5px; object-fit: cover; background: #333; transition: all 0.3s; }
+        .done { opacity: 0.15; filter: grayscale(1); border-color: #222; transform: scale(0.9); }
+        
+        #game-container-1 {
+            background-image: var(--bg-game); background-size: cover; background-position: center;
+            display: flex; flex-direction: column;
+        }
+        #game-box { flex: 1; background: rgba(0, 0, 0, 0.2); position: relative; overflow: hidden; }
+        #drag-track { width: 100%; height: 20%; min-height: 130px; max-height: 160px; background: rgba(0, 0, 0, 0.6); position: relative; border-top: 2px solid rgba(255, 68, 68, 0.3); z-index: 50; }
+        #basket { position: absolute; top: 0; width: 90px; height: 100%; cursor: grab; z-index: 51; background-size: contain; background-repeat: no-repeat; background-position: center top; left: 50%; transform: translateX(-50%); }
+        .item-circle { position: absolute; width: 60px; height: 60px; border-radius: 50%; overflow: hidden; transform: translateX(-50%); z-index: 5; background: #333; border: 2px solid rgba(255,255,255,0.3); box-shadow: 0 4px 8px rgba(0,0,0,0.5); }
+        .item-circle img { width: 100%; height: 100%; object-fit: cover; }
+        #overlay, #start-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; box-sizing: border-box; }
+        #overlay { display: none; }
+        #victory-img { width: 120px; height: auto; margin-bottom: 20px; display: none; }
+        
+        #game1-wrapper button { padding: 12px 25px; font-size: 22px; cursor: pointer; margin-top: 15px; border: none; background: #4CAF50; color: white; border-radius: 8px; box-shadow: 0 4px #2e7d32; font-family: 'Pixelify Sans', sans-serif; font-weight: bold; }
+        #game1-wrapper button:active { transform: translateY(2px); box-shadow: 0 2px #2e7d32; }
+
+        /* ========================================= */
+        /*             GAME 2 STYLES                 */
+        /* ========================================= */
+        #game2-wrapper { --wani-color: #F0CF22; --nat-color: #7B98E8; }
+        #game-container-2 { background: #2d3436; box-shadow: 0 0 30px rgba(0,0,0,0.7); display: flex; flex-direction: column;}
+        
+        #meter-container { position: absolute; top: 15px; left: 10%; width: 80%; height: 14px; border: 2px solid #fff; border-radius: 10px; background: #000; z-index: 5; overflow: hidden; }
+        #awkward-bar { width: 0%; height: 100%; background: #ff7675; transition: width 0.5s ease; border-radius: 0; }
+        #meter-label { position: absolute; top: 35px; left: 10%; width: 80%; text-align: center; font-size: 14px; color: #ff7675; letter-spacing: 1px; z-index: 5; font-weight: bold; }
+        
+        #header { display: flex; justify-content: space-evenly; padding: 65px 10px 10px 10px; }
+        .character { text-align: center; opacity: 0.3; transform: scale(0.85); transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .character.active { opacity: 1; transform: scale(1.1); }
+        .profile-pic { width: 80px; height: 80px; border-radius: 50%; border: 4px solid #444; object-fit: cover; background: #333; transition: 0.3s; }
+        #char-a.active .profile-pic { border-color: var(--wani-color); background: #E8D67B; }
+        #char-a .name-tag { color: var(--wani-color); font-weight: bold; }
+        #char-b.active .profile-pic { border-color: var(--nat-color); background: #90A6DE; }
+        #char-b .name-tag { color: var(--nat-color); font-weight: bold; }
+        .name-tag { margin-top: 8px; font-size: 16px; letter-spacing: 1px; }
+        
+        #chat-area { position: relative; margin: 15px auto 0 auto; width: 90%; background: rgba(0,0,0,0.85); border: 2px solid #555; border-radius: 12px; padding: 15px; box-sizing: border-box; text-align: center; min-height: 140px; z-index: 2; flex-grow: 0;}
+        #dialogue-text { font-size: 18px; line-height: 1.3; min-height: 48px; white-space: pre-wrap; transition: color 0.3s; }
+        #reply-prompt { color: #55efc4; margin-top: 10px; font-size: 15px; font-weight: bold; }
+        #status-text { margin-top: 8px; font-size: 16px; color: #fab1a0; text-transform: uppercase; }
+        
+        #grid { position: absolute; bottom: 30px; width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 20px; box-sizing: border-box; }
+        .square { height: 18vh; max-height: 120px; min-height: 80px; border-radius: 8px; cursor: pointer; transition: transform 0.1s; border-bottom: 5px solid rgba(0,0,0,0.4); touch-action: manipulation;}
+        .sq-1 { background: #55efc4; } .sq-2 { background: #81ecec; } .sq-3 { background: #74b9ff; } .sq-4 { background: #a29bfe; }
+        .flash { filter: brightness(1.8); transform: scale(0.95); border-bottom: 0px; }
+        @keyframes shake-effect { 0% { transform: translate(1px, 1px); } 20% { transform: translate(-3px, -2px); } 40% { transform: translate(3px, 2px); } 60% { transform: translate(-3px, 1px); } 80% { transform: translate(2px, -1px); } 100% { transform: translate(0, 0); } }
+        .shake { animation: shake-effect 0.4s ease-in-out; }
+        
+        .full-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+        #game-over-screen { display: none; }
+        #game2-wrapper button { padding: 12px 35px; font-size: 22px; cursor: pointer; font-family: 'Pixelify Sans', sans-serif; background: #0984e3; color: white; border: none; border-radius: 8px; box-shadow: 0 4px 0 #06528e; }
     </style>
 </head>
 <body>
 
-    <div id="scene-container">
-        <div id="scene-title" style="font-size: 18px; color: #888; margin-bottom: 10px;"></div>
-        <div id="typewriter-text"></div>
-        <button id="action-btn" onclick="handleAction()">CONTINUE</button>
-        
-        <!-- Small button to restart from Scene 1 for testing -->
-        <button class="reset-btn" onclick="resetStory()">Restart Story</button>
+<!-- ========================================= -->
+<!--             SCENE 1 (Waking Up)           -->
+<!-- ========================================= -->
+<div id="scene1-wrapper" class="wrapper">
+    <div class="responsive-container">
+        <!-- Layered Backgrounds for fading effect -->
+        <div id="scene1-bg1" class="story-bg" style="background-image: url('Asset/Image/game_bg1.webp');"></div>
+        <div id="scene1-bg2" class="story-bg" style="background-image: url('Asset/Image/scene1_bg2.webp');"></div>
+
+        <div id="scene1-start-overlay">
+            <button onclick="playScene1()">BEGIN DAY</button>
+        </div>
+
+        <div id="scene1-box1">
+            <p style="font-size: 28px; margin: 0;">You woke up...</p>
+        </div>
+
+        <div id="scene1-box2" class="story-box">
+            <p id="scene1-text2" style="font-size: 20px; margin-bottom: 15px; text-shadow: 1px 1px 2px black; min-height: 25px;"></p>
+            <button id="scene1-go-btn" class="story-btn" onclick="startGame1()">Let's Go</button>
+        </div>
     </div>
+</div>
 
-    <script>
-        const textElement = document.getElementById('typewriter-text');
-        const titleElement = document.getElementById('scene-title');
-        const btn = document.getElementById('action-btn');
+<!-- ========================================= -->
+<!--             SCENE 2 (Driving)             -->
+<!-- ========================================= -->
+<div id="scene2-wrapper" class="wrapper">
+    <div class="responsive-container">
+        <div id="scene2-bg" class="story-bg" style="background-image: url('Asset/Image/scene2_bg.webp');"></div>
+        <div id="scene2-box" class="story-box">
+            <p id="scene2-text" style="font-size: 20px; margin-bottom: 15px; text-shadow: 1px 1px 2px black; min-height: 25px;"></p>
+            <button id="scene2-btn" class="story-btn" onclick="startActualGame2()">Meet Friends</button>
+        </div>
+    </div>
+</div>
 
-        // 1. DATA: Define your scenes here
-        const scenes = {
-            1: {
-                title: "SCENE 1: THE WAKE UP",
-                text: "BRRRRING! The alarm clock is screaming. You see a note on the bedside table. You need to get ready fast!",
-                btnText: "START CATCHING",
-                action: () => { jumpToGame(2); } // Save that we should be on Scene 2 next
-            },
-            2: {
-                title: "SCENE 2: THE DISCOVERY",
-                text: "Great job! But wait... where is your wallet? You can't leave without it. Check the laundry room!",
-                btnText: "FIND WALLET",
-                action: () => { jumpToGame(3); } // Save that we should be on Scene 3 next
-            },
-            3: {
-                title: "SCENE 3: THE END",
-                text: "You have everything! The sun is shining, and you are officially ready. You win!",
-                btnText: "FINISH",
-                action: () => { alert("Game Over! Thanks for playing."); resetStory(); }
-            }
-        };
+<!-- ========================================= -->
+<!--             SCENE 3 (Happy Ending)        -->
+<!-- ========================================= -->
+<div id="scene3-wrapper" class="wrapper">
+    <div class="responsive-container">
+        <div id="scene3-bg" class="story-bg" style="background-image: url('Asset/Image/scene3_bg.webp');"></div>
+        <div id="scene3-box" class="story-box">
+            <p id="scene3-text" style="font-size: 20px; margin-bottom: 15px; text-shadow: 1px 1px 2px black; min-height: 25px;"></p>
+            <button id="scene3-btn" class="story-btn" onclick="location.reload()">Restart Game</button>
+        </div>
+    </div>
+</div>
 
-        // 2. LOGIC: Check where we left off
-        // We look in 'localStorage' for 'savedScene'. If nothing is there, start at 1.
-        let currentScene = parseInt(localStorage.getItem('savedScene')) || 1;
+<!-- ========================================= -->
+<!--             SCENE 4 (Sad Ending)          -->
+<!-- ========================================= -->
+<div id="scene4-wrapper" class="wrapper">
+    <div class="responsive-container">
+        <div id="scene4-bg" class="story-bg" style="background-image: url('Asset/Image/scene4_bg.webp');"></div>
+        <div id="scene4-box" class="story-box">
+            <p id="scene4-text" style="font-size: 20px; margin-bottom: 15px; text-shadow: 1px 1px 2px black; min-height: 25px;"></p>
+            <button id="scene4-btn" class="story-btn" style="background: #e74c3c; box-shadow: 0 4px #c0392b;" onclick="location.reload()">Try Again</button>
+        </div>
+    </div>
+</div>
 
-        function typeWriter(text, i = 0) {
+<!-- ========================================= -->
+<!--             GAME 1 HTML                   -->
+<!-- ========================================= -->
+<div id="game1-wrapper" class="wrapper">
+    <div id="ui">Target: <div id="target-ui"></div></div>
+    <div id="game-container-1" class="responsive-container">
+        <div id="start-screen">
+            <h1 style="font-size: 40px; margin: 10px;">Item Catch</h1>
+            <p style="font-size: 20px;">Catch the items in order!<br>Don't touch the bombs.</p>
+            <button onclick="firstStart()">START GAME</button>
+        </div>
+        <div id="overlay">
+            <img id="victory-img" src="Asset/Image/catch_happy.webp">
+            <h1 id="status" style="font-size: 48px; margin: 10px;"></h1>
+            <p id="reason" style="font-size: 20px; line-height: 1.4;"></p>
+            <button onclick="if(globalGame1Win) showScene(2); else showScene(4);">CONTINUE</button>
+        </div>
+        <div id="game-box"></div>
+        <div id="drag-track">
+            <div id="basket"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================= -->
+<!--             GAME 2 HTML                   -->
+<!-- ========================================= -->
+<div id="game2-wrapper" class="wrapper">
+    <div id="game-container-2" class="responsive-container">
+        <div id="meter-container"><div id="awkward-bar"></div></div>
+        <div id="meter-label">AWKWARD METER</div>
+        <div id="header">
+            <div id="char-a" class="character">
+                <img src="Asset/Image/wani.webp" class="profile-pic">
+                <div class="name-tag">WANI</div>
+            </div>
+            <div id="char-b" class="character">
+                <img src="Asset/Image/nat.webp" class="profile-pic">
+                <div class="name-tag">NAT</div>
+            </div>
+        </div>
+        <div id="chat-area">
+            <div id="dialogue-text"></div>
+            <div id="reply-prompt"></div>
+            <div id="status-text"></div>
+        </div>
+        <div id="grid">
+            <!-- Used onpointerdown to support instantaneous tap (mobile) and click (desktop) universally -->
+            <div class="square sq-1" onpointerdown="handleInput(1)"></div>
+            <div class="square sq-2" onpointerdown="handleInput(2)"></div>
+            <div class="square sq-3" onpointerdown="handleInput(3)"></div>
+            <div class="square sq-4" onpointerdown="handleInput(4)"></div>
+        </div>
+        <div id="start-overlay" class="full-overlay">
+            <h1 style="font-size: 40px; color: #74b9ff; margin-bottom: 10px;">SOCIAL RECALL</h1>
+            <p style="margin-bottom: 25px; color: #aaa;">The rhythm of conversation.</p>
+            <button onclick="startGame()">START GAME</button>
+        </div>
+        <div id="game-over-screen" class="full-overlay">
+            <h1 style="font-size: 48px; color: #ff7675;">GAME OVER</h1>
+            <p id="game-over-reason" style="margin-bottom: 30px; font-size: 20px;"></p>
+            <button onclick="showScene(4)">CONTINUE</button>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================= -->
+<!--             JAVASCRIPT LOGIC              -->
+<!-- ========================================= -->
+<script>
+    // --- AUDIO VARIABLES FOR BRIDGE ---
+    const audioBGM = new Audio("Asset/Audio/bgm1.ogg");
+    audioBGM.loop = true; audioBGM.volume = 0.3;
+    let failAudio = null; 
+
+    const bgm2 = new Audio('Asset/Audio/bgm1.ogg'); 
+    bgm2.loop = true; bgm2.volume = 0.15;
+    const sfxGameOver = new Audio('Asset/Audio/gameover.ogg');
+
+    // --- MASTER FLOW BRIDGE ---
+    let globalGame1Win = false;
+    let typewriterInterval = null; 
+
+    function typeWriter(text, elementId, speed = 40, callback) {
+        const element = document.getElementById(elementId);
+        element.textContent = ""; 
+        let i = 0;
+        clearInterval(typewriterInterval);
+        typewriterInterval = setInterval(() => {
             if (i < text.length) {
-                textElement.innerHTML += text.charAt(i);
-                setTimeout(() => typeWriter(text, i + 1), 40);
+                element.textContent += text[i]; i++;
             } else {
-                btn.style.visibility = "visible";
+                clearInterval(typewriterInterval);
+                if (callback) callback();
+            }
+        }, speed);
+    }
+
+    function stopAllAudio() {
+        if(audioBGM) { audioBGM.pause(); audioBGM.currentTime = 0; }
+        if(failAudio) { failAudio.pause(); failAudio.currentTime = 0; }
+        if(bgm2) { bgm2.pause(); bgm2.currentTime = 0; }
+        if(sfxGameOver) { sfxGameOver.pause(); sfxGameOver.currentTime = 0; }
+    }
+
+    function hideAllWrappers() {
+        const wrappers = ['scene1-wrapper', 'scene2-wrapper', 'scene3-wrapper', 'scene4-wrapper', 'game1-wrapper', 'game2-wrapper'];
+        wrappers.forEach(id => {
+            document.getElementById(id).style.display = 'none';
+        });
+    }
+
+    function showScene(num) {
+        stopAllAudio();
+        hideAllWrappers();
+
+        if (num === 1) {
+            document.getElementById('scene1-wrapper').style.display = 'flex';
+        } 
+        else if (num === 2) {
+            document.getElementById('scene2-wrapper').style.display = 'flex';
+            playGenericScene('scene2', 'You drive to the agreed place to meet your friends...', 'Asset/Audio/scene2_sfx.ogg');
+        } 
+        else if (num === 3) {
+            document.getElementById('scene3-wrapper').style.display = 'flex';
+            playGenericScene('scene3', 'You had a happy birthday with your friends. Congratulations.', 'Asset/Audio/scene3_sfx.ogg');
+        } 
+        else if (num === 4) {
+            document.getElementById('scene4-wrapper').style.display = 'flex';
+            playGenericScene('scene4', 'You ruined today and had a sad birthday alone.', 'Asset/Audio/scene4_sfx.ogg');
+        }
+    }
+
+    // =========================================
+    //             SCENE SCRIPTS
+    // =========================================
+    function playScene1() {
+        const alarmAudio = new Audio('Asset/Audio/alarm.ogg');
+        document.getElementById('scene1-start-overlay').style.display = 'none';
+        alarmAudio.play().catch(e => console.log("Audio play blocked", e));
+        
+        const bg1 = document.getElementById('scene1-bg1');
+        bg1.style.opacity = '1'; 
+        
+        setTimeout(() => {
+            const box1 = document.getElementById('scene1-box1');
+            box1.style.opacity = '1'; 
+            
+            setTimeout(() => {
+                box1.style.opacity = '0';
+                alarmAudio.pause(); 
+                
+                const bg2 = document.getElementById('scene1-bg2');
+                bg2.style.opacity = '1'; 
+                
+                setTimeout(() => {
+                    const box2 = document.getElementById('scene1-box2');
+                    box2.style.opacity = '1';
+                    
+                    setTimeout(() => {
+                        typeWriter("today is the day, lets get ready...", "scene1-text2", 50, () => {
+                            document.getElementById('scene1-go-btn').style.display = 'block';
+                        });
+                    }, 1000); 
+
+                }, 2000); 
+
+            }, 2500); 
+
+        }, 3000); 
+    }
+
+    function playGenericScene(sceneId, text, audioUrl) {
+        const sfx = new Audio(audioUrl);
+        sfx.play().catch(e => console.log("Audio play blocked", e));
+        
+        const bg = document.getElementById(sceneId + '-bg');
+        bg.style.opacity = '1';
+        
+        setTimeout(() => {
+            const box = document.getElementById(sceneId + '-box');
+            box.style.opacity = '1';
+            
+            setTimeout(() => {
+                typeWriter(text, sceneId + '-text', 50, () => {
+                    document.getElementById(sceneId + '-btn').style.display = 'inline-block';
+                });
+            }, 1000);
+        }, 2000);
+    }
+
+    function startGame1() {
+        hideAllWrappers();
+        document.getElementById('game1-wrapper').style.display = 'flex';
+    }
+
+    function startActualGame2() {
+        hideAllWrappers();
+        document.getElementById('game2-wrapper').style.display = 'flex';
+    }
+    
+    window.onload = () => showScene(1);
+
+    // =========================================
+    //             GAME 1 SCRIPT
+    // =========================================
+    const IMG_BASKET_NORMAL = "Asset/Image/catch_idle.webp";
+    const IMG_BASKET_HAPPY  = "Asset/Image/catch_happy.webp"; 
+    const IMG_BOMB   = "Asset/Image/bomb.webp";
+    const IMG_FRUITS = ["Asset/Image/makeup.webp","Asset/Image/perfume.webp","Asset/Image/phone.webp","Asset/Image/wallet.webp","Asset/Image/carkey.webp"];
+
+    IMG_FRUITS.forEach(src => { const img = new Image(); img.src = src; });
+    const SND_CATCH = "Asset/Audio/catch.ogg";
+    const SND_BOMB  = "Asset/Audio/superidol.ogg";
+    const SND_MISS  = "Asset/Audio/kanasai.ogg";
+
+    const MESSAGES = {
+        win: "Yay! You are ready to go out now!",
+        bomb: "Your mood is ruined by superidol.",
+        missed_1: "You missed makeup. You will look ugly later.",
+        missed_2: "You missed perfume. You will smell bad later.",
+        missed_3: "You missed phone. You cannot navigate.",
+        missed_4: "You missed wallet. No money, no honey.",
+        missed_5: "You missed carkey. You are walking today."
+    };
+
+    const box = document.getElementById('game-box');
+    const basket = document.getElementById('basket');
+    const overlay = document.getElementById('overlay');
+    const victoryImg = document.getElementById('victory-img');
+    const startScreen = document.getElementById('start-screen');
+    const targetUi = document.getElementById('target-ui');
+
+    function playCatchSFX() { new Audio(SND_CATCH).play(); }
+
+    basket.style.backgroundImage = `url(${IMG_BASKET_NORMAL})`;
+    let game1 = { active: false, step: 0, spawnCount: 0, items: [], basketX: window.innerWidth / 2, isDragging: false, lastSpawn: 0, nextSpawnDelay: 500, catchTimer: null };
+
+    // Unified Mobile + Desktop Dragging
+    const getX = (e) => (e.touches && e.touches.length > 0) ? e.touches[0].clientX : e.clientX;
+    const moveBasket = (e) => {
+        if (!game1.isDragging) return;
+        if(e.cancelable && e.type === 'touchmove') e.preventDefault(); // prevents screen pulling while dragging
+        const track = document.getElementById('drag-track').getBoundingClientRect();
+        let x = getX(e) - track.left;
+        const halfBasketWidth = basket.offsetWidth / 2 || 45;
+        x = Math.max(halfBasketWidth, Math.min(x, track.width - halfBasketWidth));
+        game1.basketX = x;
+        basket.style.left = x + 'px';
+        basket.style.transform = 'translateX(-50%)';
+    };
+
+    basket.addEventListener('mousedown', () => game1.isDragging = true);
+    window.addEventListener('mouseup', () => game1.isDragging = false);
+    window.addEventListener('mousemove', moveBasket);
+
+    basket.addEventListener('touchstart', (e) => { game1.isDragging = true; }, {passive: false});
+    window.addEventListener('touchend', () => game1.isDragging = false);
+    window.addEventListener('touchmove', moveBasket, {passive: false});
+
+    function firstStart() { startScreen.style.display = 'none'; resetGame(); }
+
+    function resetGame() {
+        if (failAudio) { failAudio.pause(); failAudio.currentTime = 0; }
+        clearTimeout(game1.catchTimer);
+        basket.style.backgroundImage = `url(${IMG_BASKET_NORMAL})`;
+        victoryImg.style.display = 'none'; 
+        audioBGM.currentTime = 0; audioBGM.play().catch(e => {});
+        game1.active = true; game1.step = 0; game1.spawnCount = 0; 
+        game1.items.forEach(i => i.el.remove()); game1.items = [];
+        game1.lastSpawn = performance.now(); 
+        
+        // Reset basket to center dynamically based on container
+        const trackWidth = document.getElementById('drag-track').offsetWidth;
+        game1.basketX = trackWidth / 2;
+        basket.style.left = '50%'; basket.style.transform = 'translateX(-50%)'; 
+        
+        overlay.style.display = 'none';
+        updateUI(); requestAnimationFrame(loop);
+    }
+
+    function updateUI() {
+        targetUi.innerHTML = IMG_FRUITS.map((src, i) => `<img src="${src}" class="ui-circle ${i < game1.step ? 'done' : ''}">`).join('');
+    }
+
+    function spawn(src, isBomb) {
+        if (!game1.active) return;
+        
+        // Dynamically calculate 5 lanes based on current box width
+        const boxWidth = box.offsetWidth;
+        const laneWidth = boxWidth / 5;
+        const laneIndex = Math.floor(Math.random() * 5);
+        let laneX = (laneIndex * laneWidth) + (laneWidth / 2);
+
+        const container = document.createElement('div');
+        container.className = 'item-circle';
+        container.style.top = '-70px'; container.style.left = laneX + 'px';
+        const img = document.createElement('img'); img.src = src;
+        container.appendChild(img); box.appendChild(container);
+        game1.items.push({ el: container, isBomb, laneX, y: -70 });
+        game1.spawnCount++; 
+    }
+
+    function endGame(isWin, msgKey) {
+        globalGame1Win = isWin; 
+        game1.active = false;
+        overlay.style.display = 'flex';
+        document.getElementById('status').innerText = isWin ? "" : "GAME OVER";
+        document.getElementById('status').style.color = isWin ? "#4CAF50" : "#ff4444";
+        document.getElementById('reason').innerText = MESSAGES[msgKey];
+        
+        audioBGM.pause();
+        if (isWin) {
+            playCatchSFX();
+            victoryImg.style.display = 'block'; 
+            basket.style.backgroundImage = `url(${IMG_BASKET_HAPPY})`;
+        } else {
+            victoryImg.style.display = 'none'; 
+            failAudio = new Audio(msgKey === 'bomb' ? SND_BOMB : SND_MISS);
+            failAudio.play();
+        }
+    }
+
+    function loop(time) {
+        if (!game1.active) return;
+        let gameHeight = box.offsetHeight;
+        if (time - game1.lastSpawn > game1.nextSpawnDelay) {
+            let isBomb = true; 
+            const fruitVisible = game1.items.some(i => !i.isBomb);
+            if (game1.spawnCount >= 6 && !fruitVisible && game1.step < 5) {
+                if (Math.random() < 0.10) isBomb = false;
+            }
+            spawn(isBomb ? IMG_BOMB : IMG_FRUITS[game1.step], isBomb);
+            game1.lastSpawn = time;
+            game1.nextSpawnDelay = Math.random() * 200 + 350; 
+        }
+        for (let i = game1.items.length - 1; i >= 0; i--) {
+            const item = game1.items[i];
+            item.y += 5.0;
+            item.el.style.top = item.y + 'px';
+            if (item.y >= gameHeight - 35 && item.y <= gameHeight - 5) {
+                // Expanded hit box slightly to accommodate fluid mobile sizing
+                if (Math.abs(item.laneX - game1.basketX) < 65) {
+                    if (item.isBomb) { endGame(false, 'bomb'); return; }
+                    playCatchSFX();
+                    game1.step++; item.el.remove(); game1.items.splice(i, 1);
+                    updateUI();
+                    basket.style.backgroundImage = `url(${IMG_BASKET_HAPPY})`;
+                    clearTimeout(game1.catchTimer);
+                    game1.catchTimer = setTimeout(() => { if (game1.active) basket.style.backgroundImage = `url(${IMG_BASKET_NORMAL})`; }, 1500);
+                    if (game1.step === 5) endGame(true, 'win');
+                    continue;
+                }
+            }
+            if (item.y > gameHeight) { 
+                if (!item.isBomb) { endGame(false, `missed_${game1.step + 1}`); return; }
+                item.el.remove(); game1.items.splice(i, 1);
             }
         }
+        requestAnimationFrame(loop);
+    }
 
-        function loadScene(sceneId) {
-            const scene = scenes[sceneId];
-            titleElement.innerText = scene.title;
-            textElement.innerHTML = "";
-            btn.innerText = scene.btnText;
-            btn.style.visibility = "hidden";
-            typeWriter(scene.text);
+    // =========================================
+    //             GAME 2 SCRIPT
+    // =========================================
+    const PATHS = {
+        sfx: ['Asset/Audio/sq1.ogg', 'Asset/Audio/sq2.ogg', 'Asset/Audio/sq3.ogg', 'Asset/Audio/sq4.ogg'],
+        fail: 'Asset/Audio/bs.ogg'
+    };
+
+    const DIALOGUES = [
+        { speaker: 'A', text: "Lapar ni. Jom pi makan.", targetReply: "Jom! Aku pun tak makan lagi.", failReply: "Sapa suruh kamu tak makan tadi.", patternLen: 3, speed: 800, audio: 'Asset/Audio/dialog1.ogg' },
+        { speaker: 'B', text: "Nak makan kat mano?", targetReply: "Mana-mana pun boleh je.", failReply: "Taknak la, nak diet.", patternLen: 3, speed: 700, audio: 'Asset/Audio/dialog2.ogg' },
+        { speaker: 'A', text: "Lepas makan, jom tengok wayang.", targetReply: "Boleh! Lama tak masuk cinema.", failReply: "Taknak, bazir masa aku.", patternLen: 4, speed: 650, audio: 'Asset/Audio/dialog3.ogg' },
+        { speaker: 'B', text: "Lepas tu, nak pi mano?", targetReply: "Aku tau satu tempat cantik.", failReply: "Nanti aku perlu balik company.", patternLen: 4, speed: 600, audio: 'Asset/Audio/dialog4.ogg' },
+        { speaker: 'A', text: "Ada apa kat situ?", targetReply: "Ada kucing ada pantai.", failReply: "Saja nak OT.", patternLen: 5, speed: 500, audio: 'Asset/Audio/dialog5.ogg' },
+        { speaker: 'B', text: "Macam syiok", targetReply: "Tak tipu. Jom ah nanti.", failReply: "Mestila, gaji lagi penting.", patternLen: 5, speed: 450, audio: 'Asset/Audio/dialog6.ogg' }
+    ];
+
+    const HIT_WINDOW = 150; 
+    const START_TIMEOUT_MS = 3000; 
+
+    const sfxFail = new Audio(PATHS.fail);
+    const squareSFX = PATHS.sfx.map(src => new Audio(src));
+
+    let currentStep = 0;
+    let awkwardScore = 0;
+    let gameState = 'IDLE';
+    let sequence = []; 
+    let playerInputs = [];
+    let firstHitTime = 0;
+    let startTimeoutTimer = null;
+
+    function startGame() {
+        document.getElementById('start-overlay').style.display = 'none';
+        bgm2.play().catch(() => {});
+
+        document.getElementById('dialogue-text').textContent = "";
+        document.getElementById('status-text').innerText = "";
+
+        const introMsg = "You meet up with your friends, Wani and Nat...";
+        typeWriter(introMsg, "dialogue-text", 50, () => {
+            setTimeout(() => {
+                document.getElementById('dialogue-text').textContent = "";
+                nextRound();
+            }, 2000);
+        });
+    }
+
+    function triggerShake() {
+        const container = document.getElementById('game-container-2'); 
+        container.classList.remove('shake');
+        void container.offsetWidth; 
+        container.classList.add('shake');
+    }
+
+    function updateAwkwardMeter(amount) {
+        awkwardScore += amount;
+        document.getElementById('awkward-bar').style.width = Math.min(awkwardScore, 100) + "%";
+        if (awkwardScore >= 100) {
+            setTimeout(() => { triggerGameOver("Things got way too awkward..."); }, 2000);
+        }
+    }
+
+    function triggerGameOver(reason) {
+        if (gameState === 'GAMEOVER') return;
+        gameState = 'GAMEOVER';
+        bgm2.pause();
+        sfxGameOver.currentTime = 0;
+        sfxGameOver.play().catch(e => {});
+        document.getElementById('game-over-reason').innerText = reason;
+        document.getElementById('game-over-screen').style.display = 'flex';
+    }
+
+    function nextRound() {
+        if (currentStep >= DIALOGUES.length) {
+            typeWriter("CONVERSATION COMPLETE!", "dialogue-text", 50);
+            document.getElementById('status-text').innerText = "SUCCESSFUL HANG OUT!";
+            setTimeout(() => showScene(3), 3000); 
+            return;
         }
 
-        function jumpToGame(nextSceneId) {
-            // Save the NEXT scene number before leaving the page
-            localStorage.setItem('savedScene', nextSceneId);
-            window.location.href = "sample_game.html";
+        gameState = 'DIALOGUE';
+        const data = DIALOGUES[currentStep];
+        const isWani = (data.speaker === 'A');
+        
+        document.getElementById('char-a').classList.toggle('active', isWani);
+        document.getElementById('char-b').classList.toggle('active', !isWani);
+        
+        const themeColor = isWani ? 'var(--wani-color)' : 'var(--nat-color)';
+        document.getElementById('dialogue-text').style.color = themeColor;
+        
+        document.getElementById('reply-prompt').innerText = "";
+        document.getElementById('status-text').innerText = "";
+        document.getElementById('reply-prompt').style.color = "#55efc4";
+
+        new Audio(data.audio).play().catch(e => {});
+        
+        typeWriter(data.text, "dialogue-text", 40, () => {
+            setTimeout(() => {
+                document.getElementById('reply-prompt').innerText = `Let's Reply: "${data.targetReply}"`;
+                setTimeout(runPattern, 1000);
+            }, 800);
+        });
+    }
+
+    function runPattern() {
+        gameState = 'SHOWING';
+        sequence = []; 
+        playerInputs = [];
+        const data = DIALOGUES[currentStep];
+        document.getElementById('status-text').innerText = "Listen...";
+
+        let totalDelay = 500;
+        for (let i = 0; i < data.patternLen; i++) {
+            const id = Math.floor(Math.random() * 4) + 1;
+            const randomOffset = (Math.random() * 400) - 200; 
+            const interval = (i === 0) ? 0 : Math.max(300, data.speed + randomOffset);
+            totalDelay += interval;
+            sequence.push({ id, interval });
+
+            setTimeout(() => {
+                flashSquare(id);
+                if (i === data.patternLen - 1) {
+                    setTimeout(() => { startResponsePhase(); }, 800);
+                }
+            }, totalDelay);
+        }
+    }
+
+    function startResponsePhase() {
+        if (gameState === 'GAMEOVER') return;
+        gameState = 'REPLYING';
+        document.getElementById('status-text').innerText = "GO!";
+
+        startTimeoutTimer = setTimeout(() => {
+            if (playerInputs.length === 0 && gameState === 'REPLYING') {
+                resolveRound(false, "You did not reply");
+            }
+        }, START_TIMEOUT_MS);
+    }
+
+    function handleInput(id) {
+        if (gameState !== 'REPLYING') return;
+        const now = Date.now();
+        flashSquare(id);
+
+        if (playerInputs.length === 0) {
+            clearTimeout(startTimeoutTimer);
+            if (id === sequence[0].id) {
+                firstHitTime = now;
+                playerInputs.push({ id, time: now });
+                if (playerInputs.length === sequence.length) resolveRound(true, "PERFECT!");
+            } else {
+                resolveRound(false, "WRONG START!");
+            }
+            return;
         }
 
-        function handleAction() {
-            scenes[currentScene].action();
+        let idx = playerInputs.length;
+        let expected = sequence[idx];
+        let targetTimeOffset = 0;
+        for (let i = 1; i <= idx; i++) {
+            targetTimeOffset += sequence[i].interval;
         }
 
-        function resetStory() {
-            localStorage.removeItem('savedScene');
-            location.reload();
+        const actualOffset = now - firstHitTime;
+        const diff = Math.abs(actualOffset - targetTimeOffset);
+
+        if (id === expected.id && diff <= HIT_WINDOW) {
+            playerInputs.push({ id, time: now });
+            if (playerInputs.length === sequence.length) {
+                resolveRound(true, "PERFECT!");
+            }
+        } else {
+            const reason = (id !== expected.id) ? "WRONG SQUARE!" : (actualOffset < targetTimeOffset ? "TOO EARLY!" : "TOO LATE!");
+            resolveRound(false, reason);
+        }
+    }
+
+    function resolveRound(success, msg) {
+        if (gameState === 'GAMEOVER') return;
+        gameState = 'IDLE';
+        clearTimeout(startTimeoutTimer);
+
+        const data = DIALOGUES[currentStep];
+        document.getElementById('status-text').innerText = msg;
+
+        if (!success) {
+            triggerShake();
+            sfxFail.currentTime = 0;
+            sfxFail.play().catch(e => {});
+            document.getElementById('reply-prompt').style.color = "#ff7675";
+            if (msg === "You did not reply") {
+                document.getElementById('reply-prompt').innerText = "(No response)";
+            } else {
+                document.getElementById('reply-prompt').innerText = `You: "${data.failReply}"`;
+            }
+            updateAwkwardMeter(34);
         }
 
-        // Start the page on the correct scene
-        loadScene(currentScene);
-    </script>
+        currentStep++;
+        setTimeout(() => {
+            if (awkwardScore < 100 && gameState !== 'GAMEOVER') nextRound();
+        }, 2200);
+    }
+
+    function flashSquare(id) {
+        const el = document.querySelector(`.sq-${id}`);
+        if(!el) return;
+        el.classList.add('flash');
+        const sfx = squareSFX[id-1];
+        sfx.currentTime = 0;
+        sfx.play().catch(e => {});
+        setTimeout(() => el.classList.remove('flash'), 150);
+    }
+</script>
 </body>
 </html>
