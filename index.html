@@ -117,11 +117,14 @@
         #game2-wrapper { --wani-color: #F0CF22; --nat-color: #7B98E8; }
         #game-container-2 { background: #2d3436; box-shadow: 0 0 30px rgba(0,0,0,0.7); display: flex; flex-direction: column;}
         
-        #meter-container { position: absolute; top: 15px; left: 10%; width: 80%; height: 14px; border: 2px solid #fff; border-radius: 10px; background: #000; z-index: 10; overflow: hidden; }
+        #meter-container { position: absolute; top: 10px; left: 10%; width: 80%; height: 12px; border: 2px solid #fff; border-radius: 10px; background: #000; z-index: 10; overflow: hidden; }
+        #meter-label { position: absolute; top: 26px; left: 10%; width: 80%; text-align: center; font-size: 12px; color: #ff7675; letter-spacing: 1px; z-index: 10; font-weight: bold; }
+        /*#meter-container { position: absolute; top: 15px; left: 10%; width: 80%; height: 14px; border: 2px solid #fff; border-radius: 10px; background: #000; z-index: 10; overflow: hidden; }
+        */
         #awkward-bar { width: 0%; height: 100%; background: #ff7675; transition: width 0.5s ease; border-radius: 0; }
-        #meter-label { position: absolute; top: 35px; left: 10%; width: 80%; text-align: center; font-size: 14px; color: #ff7675; letter-spacing: 1px; z-index: 10; font-weight: bold; }
-        
-        #header { display: flex; justify-content: space-evenly; padding: 18% 5% 5% 5%; }
+        /*#meter-label { position: absolute; top: 35px; left: 10%; width: 80%; text-align: center; font-size: 14px; color: #ff7675; letter-spacing: 1px; z-index: 10; font-weight: bold; }
+        */
+        #header { display: flex; justify-content: space-evenly; align-items: center; padding: 5% 5% 2% 5%; height: calc(33% - 40px); box-sizing: border-box; }
         .character { text-align: center; opacity: 0.3; transform: scale(0.85); transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); flex: 1; }
         .character.active { opacity: 1; transform: scale(1.1); }
         
@@ -133,14 +136,14 @@
         #char-b .name-tag { color: var(--nat-color); font-weight: bold; }
         .name-tag { margin-top: 8px; font-size: 16px; letter-spacing: 1px; }
         
-        #chat-area { position: relative; margin: 15px auto 0 auto; width: 90%; background: rgba(0,0,0,0.85); border: 2px solid #555; border-radius: 12px; padding: 15px; box-sizing: border-box; text-align: center; min-height: 140px; z-index: 2; flex-grow: 0;}
+        #chat-area { position: absolute; top: 33%; left: 5%; width: 90%; height: calc(33% - 10px); background: rgba(0,0,0,0.85); border: 2px solid #555; border-radius: 12px; padding: 12px; box-sizing: border-box; text-align: center; z-index: 2; display: flex; flex-direction: column; justify-content: center; }
         #dialogue-text { font-size: 18px; line-height: 1.3; min-height: 48px; white-space: pre-wrap; transition: color 0.3s; }
         #reply-prompt { color: #55efc4; margin-top: 10px; font-size: 15px; font-weight: bold; }
         #status-text { margin-top: 8px; font-size: 16px; color: #fab1a0; text-transform: uppercase; }
         
-        #grid { position: absolute; bottom: 30px; width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 20px; box-sizing: border-box; }
+        #grid { position: absolute; top: 68%; left: 5%; width: 90%; height: calc(32% - 20px); display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 10px; box-sizing: border-box; }
         /* Using aspect-ratio for squares ensures they scale perfectly within the 90% width container */
-        .square { width: 100%; aspect-ratio: 1 / 0.85; border-radius: 8px; cursor: pointer; transition: transform 0.1s; border-bottom: 5px solid rgba(0,0,0,0.4); touch-action: manipulation;}
+        .square { width: 100%; height: 100%; border-radius: 8px; cursor: pointer; transition: transform 0.1s; border-bottom: 5px solid rgba(0,0,0,0.4); touch-action: manipulation; }
         .sq-1 { background: #55efc4; } .sq-2 { background: #81ecec; } .sq-3 { background: #74b9ff; } .sq-4 { background: #a29bfe; }
         .flash { filter: brightness(1.8); transform: scale(0.95); border-bottom: 0px; }
         @keyframes shake-effect { 0% { transform: translate(1px, 1px); } 20% { transform: translate(-3px, -2px); } 40% { transform: translate(3px, 2px); } 60% { transform: translate(-3px, 1px); } 80% { transform: translate(2px, -1px); } 100% { transform: translate(0, 0); } }
@@ -621,6 +624,20 @@
         bgm2.play().catch(() => {});
         document.getElementById('dialogue-text').textContent = "";
         document.getElementById('status-text').innerText = "";
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                if (gameState === 'SHOWING' || gameState === 'REPLYING') {
+                    bgm2.pause();
+                    gameState = 'IDLE';
+                    clearTimeout(startTimeoutTimer);
+                }
+            } else {
+                if (gameState === 'IDLE' && currentStep < DIALOGUES.length) {
+                    bgm2.play().catch(() => {});
+                    setTimeout(() => nextRound(), 800);
+                }
+            }
+        });
 
         const introMsg = "You meet up with your friends, Wani and Nat...";
         typeWriter(introMsg, "dialogue-text", 50, () => {
