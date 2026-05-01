@@ -79,6 +79,9 @@
         #scene1-start-overlay button {
             padding: 12px 25px; font-size: 22px; cursor: pointer; border: none; background: #4CAF50; color: white; border-radius: 8px; box-shadow: 0 4px #2e7d32; font-family: 'Pixelify Sans', sans-serif; font-weight: bold;
         }
+        #scene3-box {
+            bottom: 22%;
+        }
 
         /* ========================================= */
         /*             GAME 1 STYLES                 */
@@ -124,7 +127,7 @@
         #awkward-bar { width: 0%; height: 100%; background: #ff7675; transition: width 0.5s ease; border-radius: 0; }
         /*#meter-label { position: absolute; top: 35px; left: 10%; width: 80%; text-align: center; font-size: 14px; color: #ff7675; letter-spacing: 1px; z-index: 10; font-weight: bold; }
         */
-        #header { display: flex; justify-content: space-evenly; align-items: center; padding: 0 5%; position: absolute; top: 52px; left: 0; right: 0; bottom: 33%; box-sizing: border-box; overflow: hidden; }
+        #header { display: flex; justify-content: space-evenly; align-items: center; padding: 0 5%; position: absolute; top: 48px; left: 0; right: 0; bottom: 70%; box-sizing: border-box; overflow: hidden; }
         .character { text-align: center; opacity: 0.3; transform: scale(0.85); transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); flex: 1; }
         .character.active { opacity: 1; transform: scale(1.1); }
         
@@ -151,7 +154,35 @@
         
         .full-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
         #game-over-screen { display: none; }
-        #game2-wrapper button { padding: 12px 35px; font-size: 22px; cursor: pointer; font-family: 'Pixelify Sans', sans-serif; background: #0984e3; color: white; border: none; border-radius: 8px; box-shadow: 0 4px 0 #06528e; }
+        #game2-wrapper button { padding: 12px 25px; font-size: 22px; cursor: pointer; margin-top: 15px; border: none; background: #4CAF50; color: white; border-radius: 8px; box-shadow: 0 4px #2e7d32; font-family: 'Pixelify Sans', sans-serif; font-weight: bold; }
+        #game2-wrapper button:active { transform: translateY(2px); box-shadow: 0 2px #2e7d32; }
+
+        @keyframes char-jump {
+            0%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-22%); }
+            60% { transform: translateY(-10%); }
+        }
+        .scene3-char {
+            height: 85%;
+            width: auto;
+            object-fit: contain;
+            animation: char-jump 0.9s ease-in-out infinite;
+        }
+
+        @keyframes title-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .menu-title-word {
+            font-family: 'Pixelify Sans', sans-serif;
+            font-size: 100px;
+            font-weight: 700;
+            color: white;
+            text-shadow: 0 4px 12px rgba(0,0,0,0.6);
+            display: inline-block;
+            margin: 0 8px;
+            animation: title-float 2.5s ease-in-out infinite;
+        }
     </style>
 </head>
 <body>
@@ -166,11 +197,38 @@
         <div id="scene1-bg2" class="story-bg" style="background-image: url('Asset/Image/scene1_bg2.webp');"></div>
 
         <div id="scene1-start-overlay">
-            <button onclick="playScene1()">BEGIN DAY</button>
+            <div style="
+                position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+                background-image: url('Asset/Image/menu_bg.webp');
+                background-size: cover; background-position: center;">
+            </div>
+
+            <div style="
+                position: absolute; top: 20%; left: 0; width: 100%;
+                text-align: center; z-index: 1;">
+                <span class="menu-title-word" style="animation-delay: 0s;">Jima</span>
+                <span class="menu-title-word" style="animation-delay: 0.4s;">Sim</span>
+            </div>
+
+            <button onclick="beginDay()" style="
+                position: absolute; bottom: 10%; left: 50%; transform: translateX(-50%);
+                z-index: 1;">BEGIN DAY</button>
+            <p style="
+                position: absolute; bottom: 6%; left: 50%; transform: translateX(-50%);
+                z-index: 1; color: white; font-size: 14px; text-align: center;
+                text-shadow: 0 2px 4px rgba(0,0,0,0.8); white-space: nowrap; margin: 0;">
+                🔊 Turn on volume for full experience
+            </p>
+
+            <div id="scene1-fadeout" style="
+                position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+                background: black; opacity: 0; pointer-events: none;
+                transition: opacity 1s ease; z-index: 10;">
+            </div>
         </div>
 
         <div id="scene1-box1">
-            <p style="font-size: 28px; margin: 0;">You woke up...</p>
+            <p style="font-size: 28px; margin: 0;">You woke up from your alarm...</p>
         </div>
 
         <div id="scene1-box2" class="story-box">
@@ -188,7 +246,7 @@
         <div id="scene2-bg" class="story-bg" style="background-image: url('Asset/Image/scene2_bg.webp');"></div>
         <div id="scene2-box" class="story-box">
             <p id="scene2-text" style="font-size: 20px; margin-bottom: 15px; text-shadow: 1px 1px 2px black; min-height: 25px;"></p>
-            <button id="scene2-btn" class="story-btn" onclick="startActualGame2()">Meet Friends</button>
+            <button id="scene2-btn" class="story-btn" onclick="startActualGame2()">Meet Besties</button>
         </div>
     </div>
 </div>
@@ -199,6 +257,16 @@
 <div id="scene3-wrapper" class="wrapper">
     <div class="responsive-container">
         <div id="scene3-bg" class="story-bg" style="background-image: url('Asset/Image/scene3_bg.webp');"></div>
+
+        <div id="scene3-characters" style="
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 20%;
+            display: none; align-items: flex-end; justify-content: space-evenly;
+            padding: 0 5%; box-sizing: border-box; z-index: 4;">
+            <img src="Asset/Image/wani_stand.webp" class="scene3-char" style="animation-delay: 0s;">
+            <img src="Asset/Image/jima_stand.webp" class="scene3-char" style="animation-delay: 0.35s;">
+            <img src="Asset/Image/nat_stand.webp" class="scene3-char" style="animation-delay: 0.6s;">
+        </div>
+
         <div id="scene3-box" class="story-box">
             <p id="scene3-text" style="font-size: 20px; margin-bottom: 15px; text-shadow: 1px 1px 2px black; min-height: 25px;"></p>
             <button id="scene3-btn" class="story-btn" onclick="location.reload()">Restart Game</button>
@@ -227,7 +295,7 @@
     <div id="game-container-1" class="responsive-container">
         <div id="start-screen">
             <h1 style="font-size: 40px; margin: 10px;">Item Catch</h1>
-            <p style="font-size: 20px;">Catch the items in order!<br>Don't touch the bombs.</p>
+            <p style="font-size: 20px;">You are getting ready cause you are meeting your besties later.<br>Catch the items in order!<br>Don't catch the bombs.</p>
             <button onclick="firstStart()">START GAME</button>
         </div>
         <div id="overlay">
@@ -273,8 +341,8 @@
             <div class="square sq-4" onpointerdown="handleInput(4)"></div>
         </div>
         <div id="start-overlay" class="full-overlay">
-            <h1 style="font-size: 40px; color: #74b9ff; margin-bottom: 10px;">SOCIAL RECALL</h1>
-            <p style="margin-bottom: 25px; color: #aaa;">The rhythm of conversation.</p>
+            <h1 style="font-size: 40px; margin: 10px;">Conversation Tempo</h1>
+            <p style="font-size: 20px;">You are going to talk with your besties<br>This game is like Simon Says but you have to match the tempo too<br>Don't let the conversation get too awkward.</p>
             <button onclick="startGame()">START GAME</button>
         </div>
         <div id="game-over-screen" class="full-overlay">
@@ -294,8 +362,8 @@
     audioBGM.loop = true; audioBGM.volume = 0.3;
     let failAudio = null; 
 
-    const bgm2 = new Audio('Asset/Audio/bgm1.ogg'); 
-    bgm2.loop = true; bgm2.volume = 0.15;
+    const bgm2 = new Audio('Asset/Audio/bgm2.ogg'); 
+    bgm2.loop = true; bgm2.volume = 0.8;
     const sfxGameOver = new Audio('Asset/Audio/gameover.ogg');
 
     // --- MASTER FLOW BRIDGE ---
@@ -348,21 +416,30 @@
         } 
         else if (num === 2) {
             document.getElementById('scene2-wrapper').style.display = 'flex';
-            playGenericScene('scene2', 'You drive to the agreed place to meet your friends...', 'Asset/Audio/scene2_sfx.ogg');
+            playGenericScene('scene2', 'You drive to the agreed place to meet your besties...', 'Asset/Audio/scene2_sfx.ogg');
         } 
         else if (num === 3) {
             document.getElementById('scene3-wrapper').style.display = 'flex';
-            playGenericScene('scene3', 'You had a happy birthday with your friends. Congratulations.', 'Asset/Audio/scene3_sfx.ogg');
+            playGenericScene('scene3', 'After the hangout with Wani and Nat, they threw a surprise party for you. You had a fun time with them. Congratulations and Happy Birthday!!', 'Asset/Audio/scene3_sfx.ogg');
         } 
         else if (num === 4) {
             document.getElementById('scene4-wrapper').style.display = 'flex';
-            playGenericScene('scene4', 'You ruined today and had a sad birthday alone.', 'Asset/Audio/scene4_sfx.ogg');
+            new Audio('Asset/Audio/scene4_sfx.ogg').play().catch(e => {});
+            new Audio('Asset/Audio/buzhidao.ogg').play().catch(e => {});
+            playGenericScene('scene4', 'You ruined today and had a sad birthday alone.', '');
         }
     }
 
     // =========================================
     //             SCENE SCRIPTS
     // =========================================
+    function beginDay() {
+        const fadeout = document.getElementById('scene1-fadeout');
+        fadeout.style.opacity = '1';
+        fadeout.style.pointerEvents = 'auto';
+        setTimeout(() => playScene1(), 1000);
+    }
+
     function playScene1() {
         const alarmAudio = new Audio('Asset/Audio/alarm.ogg');
         document.getElementById('scene1-start-overlay').style.display = 'none';
@@ -387,7 +464,7 @@
                     box2.style.opacity = '1';
                     
                     setTimeout(() => {
-                        typeWriter("today is the day, lets get ready...", "scene1-text2", 50, () => {
+                        typeWriter("You looked towards the calendar on the table. You realized today is the day. Let's get ready!", "scene1-text2", 50, () => {
                             document.getElementById('scene1-go-btn').style.display = 'block';
                         });
                     }, 1000); 
@@ -400,11 +477,22 @@
     }
 
     function playGenericScene(sceneId, text, audioUrl) {
-        const sfx = new Audio(audioUrl);
-        sfx.play().catch(e => console.log("Audio play blocked", e));
+        if (audioUrl) {
+            const sfx = new Audio(audioUrl);
+            sfx.play().catch(e => console.log("Audio play blocked", e));
+        }
         
         const bg = document.getElementById(sceneId + '-bg');
-        bg.style.opacity = '1';
+        // Small delay lets the display:flex render first, then fade kicks in
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                bg.style.opacity = '1';
+            });
+        });
+
+        if (sceneId === 'scene3') {
+            document.getElementById('scene3-characters').style.display = 'flex';
+        }
         
         setTimeout(() => {
             const box = document.getElementById(sceneId + '-box');
@@ -428,7 +516,70 @@
         document.getElementById('game2-wrapper').style.display = 'flex';
     }
     
-    window.onload = () => showScene(1);
+    window.onload = () => {
+        preloadAssets();
+        showScene(1);
+    };
+
+    function preloadAssets() {
+        const images = [
+            'Asset/Image/game_bg1.webp',
+            'Asset/Image/scene1_bg2.webp',
+            'Asset/Image/scene2_bg.webp',
+            'Asset/Image/scene3_bg.webp',
+            'Asset/Image/scene4_bg.webp',
+            'Asset/Image/dialog_bg.webp',
+            'Asset/Image/catch_idle.webp',
+            'Asset/Image/catch_happy.webp',
+            'Asset/Image/bomb.webp',
+            'Asset/Image/makeup.webp',
+            'Asset/Image/perfume.webp',
+            'Asset/Image/phone.webp',
+            'Asset/Image/wallet.webp',
+            'Asset/Image/carkey.webp',
+            'Asset/Image/wani.webp',
+            'Asset/Image/nat.webp',
+            'Asset/Image/wani_stand.webp',
+            'Asset/Image/nat_stand.webp',
+            'Asset/Image/jima_stand.webp',
+        ];
+
+        const audio = [
+            'Asset/Audio/bgm1.ogg',
+            'Asset/Audio/bgm2.ogg',
+            'Asset/Audio/alarm.ogg',
+            'Asset/Audio/scene2_sfx.ogg',
+            'Asset/Audio/scene3_sfx.ogg',
+            'Asset/Audio/scene4_sfx.ogg',
+            'Asset/Audio/buzhidao.ogg',
+            'Asset/Audio/gameover.ogg',
+            'Asset/Audio/catch.ogg',
+            'Asset/Audio/superidol.ogg',
+            'Asset/Audio/kanasai.ogg',
+            'Asset/Audio/bs.ogg',
+            'Asset/Audio/sq1.ogg',
+            'Asset/Audio/sq2.ogg',
+            'Asset/Audio/sq3.ogg',
+            'Asset/Audio/sq4.ogg',
+            'Asset/Audio/dialog1.ogg',
+            'Asset/Audio/dialog2.ogg',
+            'Asset/Audio/dialog3.ogg',
+            'Asset/Audio/dialog4.ogg',
+            'Asset/Audio/dialog5.ogg',
+            'Asset/Audio/dialog6.ogg',
+        ];
+
+        images.forEach(src => {
+            const img = new Image();
+            img.src = src;
+        });
+
+        audio.forEach(src => {
+            const a = new Audio();
+            a.preload = 'auto';
+            a.src = src;
+        });
+    }
 
     // =========================================
     //             GAME 1 SCRIPT
@@ -554,7 +705,7 @@
         let gameHeight = box.offsetHeight;
         
         // Speed scaling based on container height
-        const fallSpeed = gameHeight * 0.007;
+        const fallSpeed = gameHeight * 0.011;
 
         if (time - game1.lastSpawn > game1.nextSpawnDelay) {
             let isBomb = true; 
@@ -647,7 +798,7 @@
             }
         });
 
-        const introMsg = "You meet up with your friends, Wani and Nat...";
+        const introMsg = "You meet up with your besties, Wani and Nat...";
         typeWriter(introMsg, "dialogue-text", 50, () => {
             setTimeout(() => {
                 document.getElementById('dialogue-text').textContent = "";
