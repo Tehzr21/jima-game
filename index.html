@@ -16,8 +16,8 @@
 
         /* --- RESPONSIVE SHARED CONTAINER --- */
         .responsive-container {
-            height: 100%; max-height: 750px;
-            width: auto; max-width: 100%;
+            width: 80vw; max-width: 450px;
+            height: auto; max-height: 750px;
             aspect-ratio: 450 / 750;
             border: 4px solid #444; border-radius: 24px;
             position: relative; overflow: hidden; background-color: #000;
@@ -544,7 +544,8 @@
             item.el.style.top = item.y + 'px';
             if (item.y >= gameHeight - 35 && item.y <= gameHeight - 5) {
                 // Expanded hit box slightly to accommodate fluid mobile sizing
-                if (Math.abs(item.laneX - game1.basketX) < 65) {
+                let hitBoxWidth = box.offsetWidth * 0.15;
+                if (Math.abs(item.laneX - game1.basketX) < hitBoxWidth) {
                     if (item.isBomb) { endGame(false, 'bomb'); return; }
                     playCatchSFX();
                     game1.step++; item.el.remove(); game1.items.splice(i, 1);
