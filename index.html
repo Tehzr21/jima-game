@@ -365,6 +365,7 @@
     const bgm2 = new Audio('Asset/Audio/bgm2.ogg'); 
     bgm2.loop = true; bgm2.volume = 0.8;
     const sfxGameOver = new Audio('Asset/Audio/gameover.ogg');
+    const sfxGameOver2 = new Audio('Asset/Audio/bodoh.ogg');
 
     // --- MASTER FLOW BRIDGE ---
     let globalGame1Win = false;
@@ -398,6 +399,7 @@
         if(failAudio) { failAudio.pause(); failAudio.currentTime = 0; }
         if(bgm2) { bgm2.pause(); bgm2.currentTime = 0; }
         if(sfxGameOver) { sfxGameOver.pause(); sfxGameOver.currentTime = 0; }
+        if(sfxGameOver2) { sfxGameOver2.pause(); sfxGameOver2.currentTime = 0; }
     }
 
     function hideAllWrappers() {
@@ -828,6 +830,8 @@
         bgm2.pause();
         sfxGameOver.currentTime = 0;
         sfxGameOver.play().catch(e => {});
+        sfxGameOver2.currentTime = 0;
+        sfxGameOver2.play().catch(e => {});
         document.getElementById('game-over-reason').innerText = reason;
         document.getElementById('game-over-screen').style.display = 'flex';
     }
