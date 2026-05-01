@@ -39,7 +39,7 @@
         /* --- WRAPPERS --- */
         .wrapper {
             display: none; flex-direction: column; align-items: center; justify-content: center; 
-            height: 100vh; width: 100vw;
+            height: 100vh; height: 100dvh; width: 100vw;
         }
 
         /* ========================================= */
@@ -564,7 +564,7 @@
             const dragTrack = document.getElementById('drag-track');
             let basketTop = dragTrack.offsetTop - (box.offsetHeight * 0.05);
             if (item.y >= basketTop && item.y <= dragTrack.offsetTop + dragTrack.offsetHeight) {
-                let hitBoxWidth = box.offsetWidth * 0.18;
+                let hitBoxWidth = box.offsetWidth * 0.14;
                 if (Math.abs(item.laneX - game1.basketX) < hitBoxWidth) {
                     if (item.isBomb) { endGame(false, 'bomb'); return; }
                     playCatchSFX();
